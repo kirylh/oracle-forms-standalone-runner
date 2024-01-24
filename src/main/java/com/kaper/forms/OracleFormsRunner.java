@@ -1,5 +1,6 @@
 package com.kaper.forms;
 
+import java.io.StringReader;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -7,6 +8,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.regex.Matcher;
@@ -253,19 +255,36 @@ public class OracleFormsRunner {
             parameters.put("serverURL", baseUrl + parameters.get("serverURL"));
         }
 
+        //Add defaults
+        parameters.put("separateFrame", "false");
+
         // Show the final result of all loaded parameters:
         Logger.logInfo("---");
         parameters.forEach((s, s2) -> Logger.logInfo(s + " = " + s2));
+
+        String serverArgs = parameters.get("serverArgs");
 
         // Add some overrides, if any passed in. You can do that using one or more jvm options: -Doverride_KEY=VALUE
         for (String name : System.getProperties().stringPropertyNames()) {
             if (name.startsWith("override_")) {
                 String key = name.replaceFirst("^override_", "");
                 String value = System.getProperty(name).trim();
-                Logger.logInfo("> Property Override: " + key + " = " + value);
-                parameters.put(key, value);
+                // Check serverArgs parameter
+                Logger.logInfo("serverArgs: " + serverArgs);
+                Logger.logInfo(key + " -> " + String.valueOf(serverArgs.matches("(.*)\\b" + key + "=(\\S*)?(.*)")));
+                if (serverArgs.matches("(.*)\\b" + key + "=(\\S*)?(.*)")) {
+                	Logger.logInfo("> Property Override in serverArgs: " + key + " = " + value);
+                	value = value.replace("\\", "\\\\").replace("$", "\\$");
+                	serverArgs = serverArgs.replaceFirst("\\b" + key + "=(\\S*)?", key + "=" + value);
+                	Logger.logInfo("replaced serverArgs: " + serverArgs);
+                	parameters.put("serverArgs", serverArgs);
+                } else {
+                    Logger.logInfo("> Property Override: " + key + " = " + value);
+                	parameters.put(key, value);
+                }
             }
         }
+
         Logger.logInfo("---");
         return parameters;
     }
@@ -278,4 +297,5 @@ public class OracleFormsRunner {
         method.setAccessible(true);
         method.invoke(ClassLoader.getSystemClassLoader(), jarFileUrl);
     }
+
 }
