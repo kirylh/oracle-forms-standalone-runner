@@ -271,8 +271,7 @@ public class OracleFormsRunner {
                 String value = System.getProperty(name).trim();
                 // Check serverArgs parameter
                 Logger.logInfo("serverArgs: " + serverArgs);
-                Logger.logInfo(key + " -> " + String.valueOf(serverArgs.matches("(.*)\\b" + key + "=(\\S*)?(.*)")));
-                if (serverArgs.matches("(.*)\\b" + key + "=(\\S*)?(.*)")) {
+                if (serverArgs != null && serverArgs.matches("(.*)\\b" + key + "=(\\S*)?(.*)")) {
                 	Logger.logInfo("> Property Override in serverArgs: " + key + " = " + value);
                 	value = value.replace("\\", "\\\\").replace("$", "\\$");
                 	serverArgs = serverArgs.replaceFirst("\\b" + key + "=(\\S*)?", key + "=" + value);
